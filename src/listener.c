@@ -5,61 +5,18 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <libudev.h>
-#include <pthread.h>
 
-/*
-    while(1){
-        //obtener usb hacerlo en un hilo (con sleep)
-        recive()/read() //conexion con el servidor
-    }
-*/
-
-struct udev *p = udev_new();
+struct udev_device* obtener_hijo(struct udev* udev, struct udev_device* padre, const char* subsistema);
+static void enumerar_disp_alm_masivo(struct udev* udev);
 
 int main(int argc, char** argv){
-
-    pid_t process_id = 0;
-
-    // Crea el proceso hijo
-    process_id = fork();
-    
-    // Verifica retorno del fork()
-    if (process_id < 0){
-        printf("fork failed!\n");
-        // Return failure in exit status
-        exit(1);
-    }
-
-    // Mata el proceso del padre
-    if (process_id > 0){
-        printf("process_id of child process %d\n", process_id);
-        exit(0);
-    }
-
-    umask(0);
-
-    chdir("/");
-
-    pthread_t hiloActualizacion;
-
-
-
-    while(1){
-        //conexion con el servidor...
-
-    }
-
-    return (0);
+	struct udev *p = udev_new();
+	while(1){
+		enumerar_disp_alm_masivo(p);
+		sleep(3);
+	}
+	return 0;
 }
-
-
-void* monitorear(void* arg){
-    while(1){
-        enumerar_disp_alm_masivo(p);
-        sleep(3);
-    }
-}
-
 
 struct udev_device* obtener_hijo(struct udev* udev, struct udev_device* padre, const char* subsistema)
 {
@@ -101,7 +58,7 @@ static void enumerar_disp_alm_masivo(struct udev* udev)
         struct udev_device* scsi_disk = obtener_hijo(udev, scsi, "scsi_disk");
 
         struct udev_device* usb 
-            = udev_device_get_parent_with_subsystem_devtype(scsi, "usb", "usb_device");
+			= udev_device_get_parent_with_subsystem_devtype(scsi, "usb", "usb_device");
         
         if (block && scsi_disk && usb){
             printf("block = %s, usb=%s:%s, scsi=%s\n",
