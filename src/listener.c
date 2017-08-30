@@ -13,7 +13,7 @@ int main(int argc, char** argv){
 	struct udev *p = udev_new();
 	while(1){
 		enumerar_disp_alm_masivo(p);
-		sleep(3);
+		sleep(1);
 	}
 	return 0;
 }
@@ -63,7 +63,7 @@ static void enumerar_disp_alm_masivo(struct udev* udev)
         if (block && scsi_disk && usb){
             printf("block = %s, usb=%s:%s, scsi=%s\n",
                 udev_device_get_devnode(block),
-                udev_device_get_sysattr_value(usb, "vendor"),
+                udev_device_get_sysattr_value(usb, "idVendor"),
                 udev_device_get_sysattr_value(usb, "idProduct"),
                 udev_device_get_sysattr_value(scsi, "vendor"));
         }

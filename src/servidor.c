@@ -17,14 +17,15 @@
 #include <sys/resource.h>
 #include <fcntl.h>
 
-#include <microhttpd.h>
+//#include <microhttpd.h>
 
 #define PORT 4545 //para comunicarse con el procesoUSB
 #define BUFLEN 100 //para lo que recibe del procesoUSB
-char* ip = 127.0.0.1;
+char* ip = "127.0.0.1";
 
 int main(int argc, char ** argv)
 {
+  int servidor;
   //Direccion del servidor
   struct sockaddr_in direccion_servidor;
   //ponemos en 0 la estructura direccion_servidor
@@ -34,7 +35,7 @@ int main(int argc, char ** argv)
   //IPv4
   direccion_servidor.sin_family = AF_INET;
   //Convertimos el numero de puerto al endianness de la red
-  direccion_servidor.sin_port = htons(puerto);
+  direccion_servidor.sin_port = htons(PORT);
   //Nos vinculamos a la interface localhost o podemos usar INADDR_ANY para ligarnos A TODAS las interfaces
   direccion_servidor.sin_addr.s_addr = inet_addr(ip);
 
@@ -79,7 +80,7 @@ int main(int argc, char ** argv)
 
     if (pid==0)
     {      
-      char *fromProcUSB = (char *)malloc(BUFRD*sizeof(char *));
+      char *fromProcUSB = (char *)malloc(BUFLEN*sizeof(char *));
       recv(procesoUSB, fromProcUSB, BUFLEN, 0);
 
       break;
