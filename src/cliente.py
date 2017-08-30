@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import requests
+import json
 
 def printmenu():
     print("\t### Menu ### ")
@@ -28,25 +29,29 @@ while (op!="5"):
     if (op == "1"):
         r = requests.get(url + "/listar_dispositivos")
         print(r.status_code)
-        print(r.json)
+        print(r.text)
     
     elif (op == "2"):
         info = {}
         info["solicitud"] = "nombrar_dispositivo"
         info["nodo"] = input("Ingrese direccion del nodo: ")
         info["nombre"] = input("Ingrese el nombre del dispositivo: ")
-        r = requests.post(url + "/nombrar_dispositivo", data = info)
+        r = requests.post(url + "/nombrar_dispositivo", data = json.dumps(info))
+        print(json.dumps(info))
+        print(len(json.dumps(info)))
         print(r.status_code)
-        print(r.json)
+        print(r.text)
     
     elif (op == "3"):
         info = {}
         info["solicitud"] = "leer_archivo"
         info["nombre"] = input("Ingrese el nombre del dispositivo: ")
         info["nombre_archivo"] = input("Ingrese el nombre del archivo: ")
-        r = requests.post(url + "/leer_archivo", data = info)
+        r = requests.post(url + "/leer_archivo", data = json.dumps(info))
+        print(json.dumps(info))
+        print(len(json.dumps(info)))
         print(r.status_code)
-        print(r.json)
+        print(r.text)
     
     elif (op == "4"):
         info = {}
@@ -55,10 +60,11 @@ while (op!="5"):
         info["nombre_archivo"] = input("Ingrese el nombre del archivo: ")
         info["contenido"] = input("Ingrese el nombre del archivo: ")
         info["tamano_contenido"] = len(info["contenido"])
-        
-        r = requests.post(url + "/escribir_archivo", data = info)
+        r = requests.post(url + "/escribir_archivo", data = json.dumps(info))
+        print(json.dumps(info))
+        print(len(json.dumps(info)))
         print(r.status_code)
-        print(r.json)
+        print(r.text)
     
     elif (op == "5"):
         print("Salio del sistema")
