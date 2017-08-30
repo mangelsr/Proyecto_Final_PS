@@ -1,7 +1,18 @@
-todo: servidor listener
+todo: servidor listener libjsmn
 
-servidor: ./src/servidor.c
-	gcc -Wall ./src/servidor.c -o ./bin/servidor
+servidor: objects
+	gcc -Wall ./obj/servidor.o -o ./bin/servidor
 
-listener: ./src/listener.c
-	gcc -Wall ./src/listener.c -ludev -o ./bin/listener
+listener: objects
+	gcc -Wall ./obj/listener.o -ludev -o ./bin/listener
+
+libjsmn: objects
+	ar rcs ./lib/libjsmn.a ./obj/jsmn.o
+
+objects:
+	gcc -Wall -fPIC -c -g -Iinclude/ src/*.c
+	mv -f *.o obj/
+
+.PHONY: clean
+clean:
+	rm -f lib/*.so obj/*.o bin/* lib/*.a
