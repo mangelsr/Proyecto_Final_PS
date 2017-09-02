@@ -1,7 +1,7 @@
 todo: servidor listener libjsmn 
 
 servidor: objects
-	gcc -Wall ./obj/servidorEjemplo.o -lmicrohttpd -o ./bin/servidorEjemplo
+	gcc -Wall ./obj/servidor.o -lmicrohttpd -o ./bin/servidor
 	gcc -Wall ./obj/ejemploPost.o -lmicrohttpd -o ./bin/ejemploPost
 
 listener: objects

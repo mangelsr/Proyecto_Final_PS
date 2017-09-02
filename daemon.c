@@ -10,9 +10,12 @@
 /*
     while(1){
         //obtener usb hacerlo en un hilo (con sleep)
-        recive()/read() //conexion con el servidor
+        recive()/read() //conexion con el daemon_server
     }
 */
+#define PORT 4545 //para comunicarse con el servidor
+#define BUFLEN 100 //para lo que recibe del servidor
+char* ip = "127.0.0.1";
 
 struct udev *p = udev_new();
 
@@ -43,12 +46,70 @@ int main(int argc, char** argv){
     pthread_t hiloActualizacion;
 
 
+////////////////////////////////S E R V I D O R///////////////////////////////////
+    int daemon_server;
+    //Direccion del daemon_server
+    struct sockaddr_in direccion_daemon_server;
+    //ponemos en 0 la estructura direccion_daemon_server
+    memset(&direccion_daemon_server, 0, sizeof(direccion_daemon_server));
 
-    while(1){
-        //conexion con el servidor...
+    //llenamos los campos
+    //IPv4
+    direccion_daemon_server.sin_family = AF_INET;
+    //Convertimos el numero de puerto al endianness de la red
+    direccion_daemon_server.sin_port = htons(PORT);
+    //Nos vinculamos a la interface localhost o podemos usar INADDR_ANY para ligarnos A TODAS las interfaces
+    direccion_daemon_server.sin_addr.s_addr = inet_addr(ip);
 
+    //Abrimos un socket para el daemon
+    daemon_server = socket(((struct sockaddr *)&direccion_daemon_server)->sa_family, SOCK_STREAM, 0);
+    if (daemon_server == -1)
+    {
+        printf("Error al abrir el socket\n");
+        return -1;
+    }
+    //Para que no haya problemas debido a que el socket siga abierto_daemon_server
+    int abierto_daemon_server = 1;
+    setsockopt(daemon_server, SOL_SOCKET, SO_REUSEADDR, &abierto_daemon_server, sizeof(abierto_daemon_server));
+
+    //Enlazamos el socket
+    int enlace_daemon_server = bind(daemon_server, (struct sockaddr *)&direccion_daemon_server, sizeof(direccion_daemon_server));
+    if(enlace_daemon_server != 0)
+    {
+        printf("Error!!!\n");
+        printf("No se puede enlazar al puerto : dirección ya está en uso\n");
+    return -1;
     }
 
+    //Ponemos al socket del daemon en espera
+    int escuchar = listen(daemon_server,100);
+    if(escuchar == -1)
+    {
+        printf("No es posible escuchar en ese puerto\n");
+        return -1;
+    }
+    printf("Enlazado al puerto.\n");
+
+    struct sockaddr_in direccion_servidor;
+    memset(&direccion_daemon_server, 0, sizeof(direccion_servidor));
+    unsigned int tam = sizeof(direccion_servidor);
+
+    while(1)
+    {
+        int servidor = accept(daemon_server,(struct sockaddr *)&direccion_servidor,&tam);
+
+        int pid = fork();
+
+        if (pid==0)
+        {      
+            char *fromServidor = (char *)malloc(BUFLEN*sizeof(char *));
+            recv(servidor, fromServidor, BUFLEN, 0);
+
+            break;
+        }
+
+    }
+//////////////////////////////////////////////////////////////////////////////////
     return (0);
 }
 
