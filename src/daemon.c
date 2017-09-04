@@ -1,9 +1,21 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
+#include <sys/types.h>          /* some systems still require this */
 #include <sys/stat.h>
-#include <string.h>
+#include <stdio.h>              /* for convenience */
+#include <stdlib.h>             /* for convenience */
+#include <stddef.h>             /* for offsetof */
+#include <string.h>             /* for convenience */
+#include <unistd.h>             /* for convenience */
+#include <signal.h>             /* for SIG_ERR */ 
+#include <netdb.h> 
+#include <errno.h> 
+#include <syslog.h> 
+#include <sys/socket.h> 
+#include <fcntl.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/resource.h>
+#include <fcntl.h>
 #include <libudev.h>
 #include <pthread.h>
 
@@ -15,9 +27,18 @@
 */
 #define PORT 4545 //para comunicarse con el servidor
 #define BUFLEN 100 //para lo que recibe del servidor
+#define MAXDEVICES 10
 char* ip = "127.0.0.1";
 
-struct udev *p = udev_new();
+struct dispositivo{
+  struct udev_device* nodo;
+  char *puntoMonje;
+  char *id;
+  char *nombre;
+};
+
+struct dispositivo dispositivos[MAXDEVICES];
+
 
 int main(int argc, char** argv){
 
@@ -45,6 +66,7 @@ int main(int argc, char** argv){
 
     pthread_t hiloActualizacion;
 
+    struct udev *p = udev_new();
 
 ////////////////////////////////S E R V I D O R///////////////////////////////////
     int daemon_server;
@@ -113,15 +135,6 @@ int main(int argc, char** argv){
     return (0);
 }
 
-
-void* monitorear(void* arg){
-    while(1){
-        enumerar_disp_alm_masivo(p);
-        sleep(3);
-    }
-}
-
-
 struct udev_device* obtener_hijo(struct udev* udev, struct udev_device* padre, const char* subsistema)
 {
     struct udev_device* hijo = NULL;
@@ -167,7 +180,7 @@ static void enumerar_disp_alm_masivo(struct udev* udev)
         if (block && scsi_disk && usb){
             printf("block = %s, usb=%s:%s, scsi=%s\n",
                 udev_device_get_devnode(block),
-                udev_device_get_sysattr_value(usb, "vendor"),
+                udev_device_get_sysattr_value(usb, "idVendor"),
                 udev_device_get_sysattr_value(usb, "idProduct"),
                 udev_device_get_sysattr_value(scsi, "vendor"));
         }
@@ -181,4 +194,12 @@ static void enumerar_disp_alm_masivo(struct udev* udev)
         udev_device_unref(scsi);
     }
     udev_enumerate_unref(enumerar);
+}
+
+void* monitorear(void* arg){
+    while(1){
+        enumerar_disp_alm_masivo((struct udev *)arg);
+        sleep(3);
+    }
+    return (void *)0;
 }

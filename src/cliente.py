@@ -36,7 +36,7 @@ while (op!="5"):
         info["solicitud"] = "nombrar_dispositivo"
         info["nodo"] = input("Ingrese direccion del nodo: ")
         info["nombre"] = input("Ingrese el nombre del dispositivo: ")
-        r = requests.post(url + "/nombrar_dispositivo", data = info)
+        r = requests.post(url + "/nombrar_dispositivo", data = {"json": json.dumps(info)})
         print(json.dumps(info))
         print(len(json.dumps(info)))
         print(r.status_code)
@@ -47,7 +47,7 @@ while (op!="5"):
         info["solicitud"] = "leer_archivo"
         info["nombre"] = input("Ingrese el nombre del dispositivo: ")
         info["nombre_archivo"] = input("Ingrese el nombre del archivo: ")
-        r = requests.post(url + "/leer_archivo", data = info)
+        r = requests.post(url + "/leer_archivo", data = {"json": json.dumps(info)})
         print(json.dumps(info))
         print(len(json.dumps(info)))
         print(r.status_code)
@@ -60,10 +60,7 @@ while (op!="5"):
         info["nombre_archivo"] = input("Ingrese el nombre del archivo: ")
         info["contenido"] = input("Ingrese el nombre del archivo: ")
         info["tamano_contenido"] = len(info["contenido"])
-        json1 = {}
-        json1["json"] = str(json.dumps(info))
-        print(json1)
-        r = requests.post(url + "/escribir_archivo", data = json1)
+        r = requests.post(url + "/escribir_archivo", data = {"json": json.dumps(info)})
         print(json.dumps(info))
         print(len(json.dumps(info)))
         print(r.status_code)
