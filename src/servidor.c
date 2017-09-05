@@ -33,6 +33,14 @@
      char *answerstring;
      struct MHD_PostProcessor *postprocessor;
    };
+
+   static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
+    if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
+        strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
+      return 0;
+    }
+    return -1;
+  }
       
    static int send_page (struct MHD_Connection *connection, const char *page){
      int ret;
@@ -57,6 +65,7 @@
                     size_t size){
      struct connection_info_struct *con_info = coninfo_cls;
      if (0 == strcmp (key, "json")){
+
        printf("%s: %s\n", key, data);
        /*
         Usar jsmn para parsear el json que envio el cliente
@@ -64,7 +73,88 @@
         por medio de sockets para cumplir lo que pide
         la respuesta amacenarla en answerstring para enviarsela al cliente
        */
-   
+
+       int i;
+       int r;
+
+       jsmn_parser p;
+       jsmntok_t t[128]; /* We expect no more than 128 tokens */
+     
+       jsmn_init(&p);
+       r = jsmn_parse(&p, data, strlen(data), t, sizeof(t)/sizeof(t[0]));
+       if (r < 0) {
+         printf("Failed to parse JSON: %d\n", r);
+         return 1;
+       }
+     
+       /* Assume the top-level element is an object */
+       if (r < 1 || t[0].type != JSMN_OBJECT) {
+         printf("Object expected\n");
+         return 1;
+       }
+
+       char* solicitud = (char *)malloc(40*sizeof(char));
+       char* nodo = (char *)malloc(50*sizeof(char));
+       char* nombre = (char *)malloc(50*sizeof(char));
+       char* nombre_archivo = (char *)malloc(50*sizeof(char));
+       char* contenido = (char *)malloc(20480*sizeof(char));
+       char* tcontenido = (char *)malloc(1024*sizeof(char));
+       int tamano_contenido;
+     
+       /* Loop over all keys of the root object */
+       for (i = 1; i < r; i++) {
+         if (jsoneq(data, &t[i], "solicitud") == 0) {
+           printf("- Solicitud: %.*s\n", t[i+1].end-t[i+1].start,
+                    data + t[i+1].start);
+           sprintf(solicitud, "%.*s", t[i+1].end-t[i+1].start, data + t[i+1].start);
+           fflush(stdout);
+           i++;
+         } else if (jsoneq(data, &t[i], "nodo") == 0) {
+           printf("- Nodo: %.*s\n", t[i+1].end-t[i+1].start,
+                    data + t[i+1].start);
+           sprintf(nodo, "%.*s", t[i+1].end-t[i+1].start, data + t[i+1].start);
+           fflush(stdout);
+           i++;
+         } else if (jsoneq(data, &t[i], "nombre") == 0) {
+           printf("- Nombre: %.*s\n", t[i+1].end-t[i+1].start,
+                    data + t[i+1].start);
+           sprintf(nombre, "%.*s", t[i+1].end-t[i+1].start, data + t[i+1].start);
+           fflush(stdout);
+           i++;
+         } else if (jsoneq(data, &t[i], "nombre_archivo") == 0) {
+           printf("- Nombre del archivo: %.*s\n", t[i+1].end-t[i+1].start,
+                    data + t[i+1].start);
+           sprintf(nombre_archivo, "%.*s", t[i+1].end-t[i+1].start, data + t[i+1].start);
+           fflush(stdout);
+           i++;
+         } else if (jsoneq(data, &t[i], "contenido") == 0) {
+           printf("- Contenido del archivo: %.*s\n", t[i+1].end-t[i+1].start,
+                    data + t[i+1].start);
+           sprintf(contenido, "%.*s", t[i+1].end-t[i+1].start, data + t[i+1].start);
+           fflush(stdout);
+           i++;
+         } else if (jsoneq(data, &t[i], "tamano_contenido") == 0) {
+           printf("- Tamano del Contenido: %.*s\n", t[i+1].end-t[i+1].start,
+                    data + t[i+1].start);
+           sprintf(tcontenido, "%.*s", t[i+1].end-t[i+1].start, data + t[i+1].start);
+           tamano_contenido = atoi(tcontenido);
+           i++;
+         } else {
+           printf("Unexpected key: %.*s\n", t[i].end-t[i].start,
+                    data + t[i].start);
+         }
+       }
+       printf("%s\n", solicitud);
+      
+       if (0==strcmp(solicitud,"nombrar_dispositivo")){
+         printf(" %s\n", nodo);
+         printf(" %s\n", nombre);
+       }
+       else if (0==strcmp(solicitud,"escribir_archivo")){
+        printf(" %s\n", contenido);
+        printf(" %d\n", tamano_contenido);
+      }
+       
        char *answerstring;
        answerstring = malloc(10);
        if (!answerstring)
@@ -136,7 +226,7 @@
        struct connection_info_struct *con_info = *con_cls;
          
        if (*upload_data_size != 0){
-         printf("Uploaded data: %s\n",upload_data);
+         //printf("Uploaded data: %s\n",upload_data);
          MHD_post_process (con_info->postprocessor, upload_data,
                            *upload_data_size);
          *upload_data_size = 0;

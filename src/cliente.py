@@ -58,7 +58,7 @@ while (op!="5"):
         info["solicitud"] = "escribir_archivo"
         info["nombre"] = input("Ingrese el nombre del dispositivo: ")
         info["nombre_archivo"] = input("Ingrese el nombre del archivo: ")
-        info["contenido"] = input("Ingrese el nombre del archivo: ")
+        info["contenido"] = input("Ingrese el contenido del archivo: ")
         info["tamano_contenido"] = len(info["contenido"])
         r = requests.post(url + "/escribir_archivo", data = {"json": json.dumps(info)})
         print(json.dumps(info))
