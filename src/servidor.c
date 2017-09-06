@@ -12,6 +12,7 @@
    #include <stdio.h>
    #include <string.h>
    #include <stdlib.h>
+   #include <arpa/inet.h>
    #include "jsmn.h"
    
    #if defined(_MSC_VER) && _MSC_VER+0 <= 1800
@@ -219,7 +220,46 @@
          comunicarse con el daemon para traer la lista de dispositivos conectados...
          armar la respuesta y responer como JSON
        */
-       return send_page (connection, "json de respuesta a GET");
+          int cliente;
+          //Direccion del cliente
+          struct sockaddr_in direccion_cliente;
+          //ponemos en 0 la estructura direccion_cliente
+          memset(&direccion_cliente, 0, sizeof(direccion_cliente));
+
+          //llenamos los campos
+          //IPv4
+          direccion_cliente.sin_family = AF_INET;		
+          //Convertimos el numero de puerto al endianness de la red
+          direccion_cliente.sin_port = htons(4545);	
+          //Nos tratamos de conectar a esta direccion
+          direccion_cliente.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+          //Abrimos un socket
+          cliente = socket(((struct sockaddr *)&direccion_cliente)->sa_family, SOCK_STREAM, 0);
+          if (cliente == -1)
+          {
+            printf("Error al abrir el socket\n");
+            return -1;
+          }
+          printf("Abierto el socket para el cliente...\n");
+
+          //Conectamos
+          int conectar = connect(cliente, (struct sockaddr *)&direccion_cliente, sizeof(direccion_cliente));
+          if (conectar != 0)
+          {
+            printf("Error: No es posible conectar\n");
+            return 1;
+          }
+          printf("conectado...\n");
+          
+          //Enviamos la ruta del archivo para que el servidor lo busque
+          send(cliente, "listar_dispositivos", 512, 0);
+          char* respuesta = (char *)malloc(1024*sizeof(char));
+          //Leemos la respuesta del servidor
+          recv(cliente, respuesta, 512, 0);
+          close(cliente);
+
+       return send_page (connection, respuesta);
      }
    
      else if (0 == strcmp(method, "POST")){
