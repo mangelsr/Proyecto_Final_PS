@@ -12,10 +12,7 @@ def printmenu():
 
 
 print("Cliente")
-
-ip = input("Ingrese la ip del servidor: ")
-port = input("Ingrese el puerto a usar: ")
-url = "http://" + ip + ":" + port
+url = "http://127.0.0.1:8888"
 
 op = ""
 
